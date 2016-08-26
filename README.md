@@ -1,0 +1,2 @@
+# Cordova-NativeCallJS
+借助WebSocket完成Android本地代码调用JavaScript代码的插件,并且可以获得返回值
