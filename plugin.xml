@@ -27,7 +27,9 @@
 		</config-file>
 
 		<source-file src="src/android/com/t/ncj/core/NativeCallJS.java" target-dir="src/com/t/ncj/core" />
-		
+		<source-file src="src/android/com/t/ncj/core/server/NCJServer.java" target-dir="src/com/t/ncj/core/server" />
+		<source-file src="src/android/com/t/ncj/core/callback/NCJEventCallback.java" target-dir="src/com/t/ncj/core/callback" />
+
 	</platform>
 
 </plugin>
