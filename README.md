@@ -2,6 +2,10 @@
 
 NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于Android平台，借助WebSocket实现，JavaWebSocket源码支持 : [https://github.com/TooTallNate/Java-WebSocket](https://github.com/TooTallNate/Java-WebSocket)
 
+由于Demo程序太大,笔者又没有VPN,一直卡着上传不上来，笔者将Demo打包放在CSDN,想要的小伙伴直接去下载就OK了
+
+[NativeCallJS Demo 下载地址](http://download.csdn.net/detail/yangjizhao/9614307)
+
 ##主要功能
 
 按照NativeCallJS的规定初始化插件和方法，就可以在Android原生代码中直接调用JavaScript的代码并获得返回值
@@ -96,7 +100,7 @@ NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于
 
 	undefined类型在返回到Native代码时候会返回 "nr" 字符串 ，代表没有返回值，不予处理即可
 
-	如果你的返回类型为function，那么插件会帮你执行这个function,直到返回的类型不再是function为止
+	如果你的返回类型为function，那么插件会帮你执行这个function,直到返回的类型不再是function为止	
 
 ##Bug反馈
 
