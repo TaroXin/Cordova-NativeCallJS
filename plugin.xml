@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.t.ncj" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <name>NativeCallJS</name>
+    <description>
+    	NativeCallJS applies to the Cordova Android platform, 
+    	the bottom of the WebSocket based,
+    	the main work is to complete the Cordova local code to access the JavaScript code plug-ins, 
+    	and you can get the return value of the Javascript function	
+    </description>
+    <keywords>
+    	Cordova Plugins NativeCallJS NCJ Taro
+    </keywords>
+    <engines>
+		<engine name="cordova" version=">=3.0.0" />
+	</engines> 
+    <js-module name="NativeCallJS" src="www/NativeCallJS.js">
+        <clobbers target="cordova.plugins.NCJ" />
+    </js-module>
+    <!-- android -->
+	<platform name="android">
+
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="NativeCallJS">
+				<param name="android-package" value="com.t.ncj.core.NativeCallJS"/>
+			</feature>
+		</config-file>
+
+		<source-file src="src/android/com/t/ncj/core/NativeCallJS.java" target-dir="src/com/t/ncj/core" />
+		
+	</platform>
+
+</plugin>
