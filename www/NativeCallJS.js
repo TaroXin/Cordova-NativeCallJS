@@ -3,15 +3,18 @@ var exec = require('cordova/exec');
 var NCJ = {
 	arg : {
 		port : 12345 ,
-		debug : false 
+		debug : false
 	},
 	init : function(arg,success,error){
 		NCJ.arg.port = arg.port || 12345 ;
-		NCJ.arg.debug = arg.debug || false ; 
-		exec(success, error, "NativeCallJS", "init", [arg]);
+		NCJ.arg.debug = arg.debug || false ;
+		exec(function(data){
+		    NCJ.openClient();
+		    success(data);
+		}, error, "NativeCallJS", "init", [NCJ.arg]);
 	},
 	shutdown : function(success,error){
-		exec(success, error, "NativeCallJS", "shutdown", []);	
+		exec(success, error, "NativeCallJS", "shutdown", []);
 	},
 	openClient : function(){
 		var client = new WebSocket("ws://localhost:" + NCJ.arg.port);
@@ -21,8 +24,10 @@ var NCJ = {
 		};
 
 		client.onmessage = function(result){
+		  NCJ.log("received methodName:" + result.data);
 			var ret = NCJ.executeLocalMethod(result.data);
-			NCJ.judgeMethodReturnType(client.ret);
+			NCJ.log("执行JavaScript方法成功,返回值为:" + ret);
+			NCJ.judgeMethodReturnType(client,ret);
 		};
 
 		client.onerror = function(result){
@@ -35,7 +40,9 @@ var NCJ = {
 	},
 	executeLocalMethod : function(methodName){
 		if( NCJ.isMethodExists(methodName) ){
-			var result = window.NCJMethods[methodName];
+		  NCJ.log("execute Method : " + methodName);
+			var result = cordova.plugins.NCJ.NCJMethods[methodName]();
+			NCJ.log("result:" + result);
 			if( result !== void 0 ){
 				return result ;
 			}
@@ -44,19 +51,22 @@ var NCJ = {
 		}
 		//无方法
 		return "nm";
-		
+
 	},
 	isMethodExists : function(methodName){
 		// window.NCJMethods[methodName] ?
-		if( window.NCJMethods ){
-			if( window.NCJMethods[methodName] ){
+    	NCJ.log("window.NCJMethods:" + window.NCJMethods);
+		if( cordova.plugins.NCJ.NCJMethods ){
+		  NCJ.log("methodName:" + methodName + " - " + cordova.plugins.NCJ.NCJMethods[methodName]);
+			if( cordova.plugins.NCJ.NCJMethods[methodName] ){
 				return true;
 			}
 		}
 		return false;
 	},
 	judgeMethodReturnType : function(client,ret){
-		if( ret === "nr" ){	
+	  	NCJ.log("检测返回值类型,返回值为:"+ret+",Client:"+client+",typeof:"+(typeof ret));
+		if( ret === "nr" ){
 			client.send("nr");
 			return;
 		}
@@ -84,7 +94,13 @@ var NCJ = {
 			ret = ret();
 			NCJ.judgeMethodReturnType(client,ret);
 		}
-	}
+	},
+	log : function(msg){
+		if( NCJ.arg.debug ){
+		    console.log(msg);
+		}
+	},
+	NCJMethods : {}
 };
 
 module.exports = NCJ ;
