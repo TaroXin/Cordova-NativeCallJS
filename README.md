@@ -34,7 +34,6 @@ NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于
 	
 	你可以下载我项目中的Java-webscoket-1.3.1.jar并添加到你的项目中即可
 
-	未完待续...
 
 ##使用方法
 	
