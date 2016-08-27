@@ -5,11 +5,11 @@ NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于
 
 由于Demo程序太大,笔者又没有VPN,一直卡着上传不上来，笔者将Demo打包放在CSDN,想要的小伙伴直接去下载就OK了
 
-[NativeCallJS Demo 下载地址](http://download.csdn.net/detail/yangjizhao/9614307)
+[NativeCallJS Demo 下载地址](http://download.csdn.net/detail/yangjizhao/9614707)
 
 ##主要功能
 
-按照NativeCallJS的规定初始化插件和方法，就可以在Android原生代码中直接调用JavaScript的代码并获得返回值
+参照NativeCallJS中给出的规定初始化插件和方法，实现Native代码随时调用JavaScript代码的功能，并可以向要调用的JavaScript函数传递需要的参数，且可以获得返回值
 
 ##搭建插件环境
 
@@ -93,7 +93,46 @@ NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于
             }
         });
 
-- 关于返回值
+- Native 调用 JavaScript 并且传递需要的参数
+
+	首先需要定义含参数的JavaScript方法
+	
+		cordova.plugins.NCJ.NCJMethods.firstNCJFunction = function(data,flag,i,f,json){
+            alert("This is Native call JavaScript Function !arg:"+data+",flag:"+
+                    flag+",int:"+i+",f:"+f+",json.test:"+json.test);
+            return function(){
+                return {
+                    type:"object",
+                    value:"可以是任何返回值,返回值为Function则自动执行!"
+                };
+            };
+        }
+	
+	接着在Native代码中调用已经定义好的 firstNCJFunction 函数 并传递相应的参数
+	
+		JSONObject testJson = new JSONObject();
+        testJson.put("test","This is json type");
+        Object[] args = new Object[]{"testXXX!",true,1,1.2,testJson};
+        NativeCallJS.call("firstNCJFunction", args, new NCJEventCallback() {
+            @Override
+            public void back(String result) {
+                try {
+                    JSONObject json = new JSONObject(result);
+                    String type = json.getString("type");
+                    String value = json.getString("value");
+                } catch (JSONException e) {
+                  e.printStackTrace();
+                }
+            }
+        });
+
+- 关于 Native 向 JavaScript 传参时的参数类型
+
+	在Native代码中调用JavaScript方法时，可以向JavaScript代码传递相应的参数，参数分为 String , int , double , float , boolean , Object 六种类型
+	
+	在传递至JavaScript函数中时，String会被转换为string类型，int会转换为int类型，double与float会被转换为float类型，boolean会被转换为boolean类型，Object会被转换为 JavaScript 对象类型 ， 也就是Json ，前提是Native中传递的Object对象可以被JSONObject或者JSONArray序列化
+
+- 关于JavaScript函数返回值
 
 	在已经定义的 JavaScript 方法中可以返回包括 undefined ，string ，number ，boolean ，object ，function 的任何一种类型
 	
