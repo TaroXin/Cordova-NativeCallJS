@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Cordova-NativeCallJS
 
 NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于Android平台，借助WebSocket实现，JavaWebSocket源码支持 : [https://github.com/TooTallNate/Java-WebSocket](https://github.com/TooTallNate/Java-WebSocket)
