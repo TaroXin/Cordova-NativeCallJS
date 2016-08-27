@@ -224,5 +224,4 @@ NativeCallJS是一个Cordova插件，支持最低版本是Cordova3.0，作用于
 	
 	Email : 15029353778@163.com
 	QQ : 870557482 
->>>>>>> 9352ceb3265d04876d131fe0d586539b71d307de
 	Mobile : 15029352778
