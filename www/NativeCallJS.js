@@ -24,7 +24,7 @@ var NCJ = {
 		};
 
 		client.onmessage = function(result){
-		  NCJ.log("received methodName:" + result.data);
+		  	NCJ.log("received message:" + result.data);
 			var ret = NCJ.executeLocalMethod(result.data);
 			NCJ.log("执行JavaScript方法成功,返回值为:" + ret);
 			NCJ.judgeMethodReturnType(client,ret);
@@ -38,10 +38,15 @@ var NCJ = {
 
 		}
 	},
-	executeLocalMethod : function(methodName){
+	executeLocalMethod : function(message){
+		var method = message.split("N?P");
+		var methodName = method[0];
+		var args = method[1];
+		NCJ.log("executeLocalMethod-methodName:" + methodName);
+		NCJ.log("executeLocalMethod-args:" + args);
 		if( NCJ.isMethodExists(methodName) ){
-		  NCJ.log("execute Method : " + methodName);
-			var result = cordova.plugins.NCJ.NCJMethods[methodName]();
+		  	NCJ.log("execute Method : " + methodName);
+			var result = NCJ.doMethod(cordova.plugins.NCJ.NCJMethods[methodName],args);
 			NCJ.log("result:" + result);
 			if( result !== void 0 ){
 				return result ;
@@ -53,9 +58,34 @@ var NCJ = {
 		return "nm";
 
 	},
+	doMethod : function(method,args){
+		NCJ.log("This is NCJ.doMethod!");
+		var argsArray = [];
+		args = JSON.parse(args);
+
+		for( var i = 0 ; i < args.length ; i++ ){
+			var arg = args[i];
+			var argObject ;
+			if( arg.type === "string" ){
+				argObject = arg.value ;
+			}else if( arg.type === "int" ){
+				argObject = parseInt(arg.value);
+			}else if( arg.type === "float" ){
+				argObject = parseFloat(arg.value);
+			}else if( arg.type === "boolean" ){
+				argObject = Boolean(Number(arg.value));
+			}else if( arg.type === "object" ){
+				argObject = JSON.parse(arg.value);
+			}else{
+				argObject = void 0 ;
+			}
+			argsArray.push(argObject);
+			NCJ.log("解析参数,type:"+type+",value:"+argObject);
+		}
+
+		return method.apply(this,argsArray);
+	},
 	isMethodExists : function(methodName){
-		// window.NCJMethods[methodName] ?
-    	NCJ.log("window.NCJMethods:" + window.NCJMethods);
 		if( cordova.plugins.NCJ.NCJMethods ){
 		  NCJ.log("methodName:" + methodName + " - " + cordova.plugins.NCJ.NCJMethods[methodName]);
 			if( cordova.plugins.NCJ.NCJMethods[methodName] ){

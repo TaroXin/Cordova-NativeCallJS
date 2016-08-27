@@ -62,12 +62,18 @@ public class NCJServer extends WebSocketServer {
         String exString = e.getMessage();
     }
 
-    public void sendToClient(String message, final NCJEventCallback callback){
+    public void sendToClient(String methodName, String args , final NCJEventCallback callback){
         this.callback = callback ;
         Collection<WebSocket> wss = this.connections();
         if( wss.size() == 0 ){
             Log.e(TAG,"没有客户端连接上服务器,请检查是否调用NCJ.init方法!");
             return;
+        }
+        String message = "";
+        if( args == null || args.length() == 0 ){
+            message = methodName;
+        }else{
+            message = methodName + "N?P" + args ;
         }
         synchronized (wss){
             for ( WebSocket conn : wss ) {
