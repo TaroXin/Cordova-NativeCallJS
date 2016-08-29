@@ -2,6 +2,7 @@ package com.t.ncj.core.server;
 
 import android.util.Log;
 
+import com.t.ncj.core.NativeCallJS;
 import com.t.ncj.core.callback.NCJEventCallback;
 
 import org.java_websocket.WebSocket;
@@ -19,6 +20,7 @@ import java.util.Collection;
 public class NCJServer extends WebSocketServer {
 
     public static final String TAG = NCJServer.class.getSimpleName();
+    public static final String startsWith = "JCNMethod:";
     private NCJEventCallback callback;
 
     public NCJServer(int port) throws UnknownHostException{
@@ -38,15 +40,19 @@ public class NCJServer extends WebSocketServer {
     public void onClose(WebSocket webSocket, int i, String s, boolean b) {
         if(WebSocketImpl.DEBUG) Log.i(TAG,"Client shutdown ,close server!");
         try {
-          this.stop();
+            this.stop();
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
     @Override
     public void onMessage(WebSocket webSocket, String message) {
         if(WebSocketImpl.DEBUG) Log.i(TAG,"server received message :" + message);
+        if( message.startsWith(NCJServer.startsWith) ){
+            NativeCallJS.handleJsCallNativeMessage(message);
+            return;
+        }
         if( callback != null ){
             if( message.equals("nm") ){
                 Log.e(TAG,"没有找到需要执行的JavaScript方法!");
@@ -79,6 +85,19 @@ public class NCJServer extends WebSocketServer {
             for ( WebSocket conn : wss ) {
                 if( conn != null ) conn.send(message);
             }
+        }
+    }
+
+    public void sendToClient(String message){
+        Collection<WebSocket> wss = this.connections();
+        if( wss.size() == 0 ){
+          Log.e(TAG,"没有客户端连接上服务器,请检查是否调用NCJ.init方法!");
+          return;
+        }
+        synchronized (wss){
+          for ( WebSocket conn : wss ) {
+            if( conn != null ) conn.send(message);
+          }
         }
     }
 }

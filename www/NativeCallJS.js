@@ -5,6 +5,8 @@ var NCJ = {
 		port : 12345 ,
 		debug : false
 	},
+	client:null,
+	jsCallNativeSuccess:void 0,
 	init : function(arg,success,error){
 		NCJ.arg.port = arg.port || 12345 ;
 		NCJ.arg.debug = arg.debug || false ;
@@ -16,18 +18,31 @@ var NCJ = {
 	shutdown : function(success,error){
 		exec(success, error, "NativeCallJS", "shutdown", []);
 	},
+	callNative : function(nativeMethodName,args,success){
+		// String nativeMethodName , Object[] args ;
+		var jsCallNativeMessage = "JCNMethod:";
+		args = NCJ.handleJsCallNativeMethodArgs(args);
+		jsCallNativeMessage += (nativeMethodName + args);
+		NCJ.client.send(jsCallNativeMessage);
+		jsCallNativeSuccess = success;
+	},
 	openClient : function(){
 		var client = new WebSocket("ws://localhost:" + NCJ.arg.port);
 
 		client.onopen = function(result){
-
+			NCJ.client = client ;
 		};
 
 		client.onmessage = function(result){
 		  	NCJ.log("received message:" + result.data);
+		  	var startWith = "JCNResult:";
+		  	if( NCJ.startsWith(result.data,startWith) ){
+		  		NCJ.doJsCallNativeResult(result.data.toString().substring(startWith.length));
+		  		return;
+		  	}
 			var ret = NCJ.executeLocalMethod(result.data);
 			NCJ.log("执行JavaScript方法成功,返回值为:" + ret);
-			NCJ.judgeMethodReturnType(client,ret);
+			client.send(NCJ.judgeMethodReturnType(ret));
 		};
 
 		client.onerror = function(result){
@@ -35,7 +50,7 @@ var NCJ = {
 		};
 
 		client.onclose = function(result){
-
+			NCJ.client = null;
 		}
 	},
 	executeLocalMethod : function(message){
@@ -57,6 +72,13 @@ var NCJ = {
 		//无方法
 		return "nm";
 
+	},
+	doJsCallNativeResult : function(data){
+		NCJ.log("接收到Native方法的返回值:"+data);
+		if( jsCallNativeSuccess ){
+			NCJ.doMethod(jsCallNativeSuccess,data);
+			jsCallNativeSuccess = void 0;
+		}
 	},
 	doMethod : function(method,args){
 		NCJ.log("This is NCJ.doMethod!");
@@ -80,7 +102,7 @@ var NCJ = {
 				argObject = void 0 ;
 			}
 			argsArray.push(argObject);
-			NCJ.log("解析参数,type:"+type+",value:"+argObject);
+			NCJ.log("解析参数,type:"+arg.type+",value:"+argObject);
 		}
 
 		return method.apply(this,argsArray);
@@ -94,36 +116,59 @@ var NCJ = {
 		}
 		return false;
 	},
-	judgeMethodReturnType : function(client,ret){
-	  	NCJ.log("检测返回值类型,返回值为:"+ret+",Client:"+client+",typeof:"+(typeof ret));
-		if( ret === "nr" ){
-			client.send("nr");
-			return;
-		}
-		if( ret === "nm" ){
-			client.send("nm");
-			return;
+	judgeMethodReturnType : function(ret){
+	  	NCJ.log("检测返回值类型,返回值为:"+ret+",typeof:"+(typeof ret));
+		if( ret === "nr" || ret === "nm" ){
+			return ret;
 		}
 
 		if( typeof ret === "string" ){
-			client.send(ret);
-			return;
+			return ret;
 		}
 
 		if( typeof ret === "number" || typeof ret === "boolean"){
-			client.send(ret.toString());
-			return;
+			return ret.toString();
 		}
 
 		if( typeof ret === "object" ){
-			client.send(JSON.stringify(ret));
-			return;
+			return JSON.stringify(ret);
 		}
 
 		if( typeof ret === "function" ){
 			ret = ret();
-			NCJ.judgeMethodReturnType(client,ret);
+			NCJ.judgeMethodReturnType(ret);
 		}
+	},
+	handleJsCallNativeMethodArgs : function(args){
+		var argString = "J?P";
+		var argArray = [];
+		for( var i = 0 ; i < args.length ; i++ ){
+			var arg = args[i];
+			var argJson = {};
+			var type = "";
+			if( typeof arg === "string" ){
+				type = "string";
+			}else if( typeof arg === "number" ){
+				if( arg.toString().indexOf(".") != -1 ){
+					type = "float";
+				}else{
+					type = "int";
+				}
+			}else if( typeof arg === "boolean" ){
+				type = "boolean";
+			}else if( typeof arg === "object" ){
+				type = "object";
+			}
+			argJson.type = type ;
+			argJson.value = arg ;
+			argArray.push(argJson);
+		}
+		return argString + JSON.stringify(argArray);
+	},
+	startsWith : function(e,s){
+		var index = e.indexOf(s);
+		if( index === 0 ) return true;
+		return false;
 	},
 	log : function(msg){
 		if( NCJ.arg.debug ){
